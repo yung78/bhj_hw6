@@ -9,40 +9,47 @@ for (let i=0; i<links.length; i++) {
     links[i].insertAdjacentElement("afterend", div);
 };
 
-const tips = document.getElementsByClassName("tooltip");
+const tips = document.querySelectorAll(".tooltip");
 
 //show tips on click
 for (let i=0; i<links.length; i++) {
     links[i].onclick =(() => {
-        if (document.querySelector(".tooltip.tooltip_active")) {
-            document.querySelector(".tooltip.tooltip_active").className = "tooltip";
-        };
-        tips[i].className += " tooltip_active";
-
-        let { top, bottom, left, right} = links[i].getBoundingClientRect();
-        let active = document.querySelector(".tooltip.tooltip_active")
-
-        switch (active.getAttribute("data-position")) {
-            case "bottom":
-                active.style.left = left + 'px';
-                active.style.top = bottom + 2 + 'px';
-                break;
-            case "top":
-                active.style.left = left + 'px';
-                active.style.top = top - 35 + 'px';
-                break;
-            case "right":
-                active.style.left = right + 2 + 'px';
-                active.style.top = top - 5 + 'px';
-                break;
-            case "left":
-                active.style.left = left - active.offsetWidth - 4 + 'px';
-                active.style.top = top - 5 + 'px';
-                break;
+        if (links[i].nextElementSibling.className == "tooltip tooltip_active") {
+            links[i].nextElementSibling.className = "tooltip";
+        } else {
+            if (document.querySelector(".tooltip.tooltip_active")) {
+                document.querySelector(".tooltip.tooltip_active").className = "tooltip";
+            };
+            links[i].nextElementSibling.className += " tooltip_active";
+            tipsPosition (links[i].nextElementSibling, links[i]);
         };
 
         return false;
     });
+};
+
+function tipsPosition (tip, tipLink) {
+    let { top, bottom, left, right} = tipLink.getBoundingClientRect();
+    let active = document.querySelector(".tooltip.tooltip_active");
+
+    switch (tip.getAttribute("data-position")) {
+        case "bottom":
+            tip.style.left = left + 'px';
+            tip.style.top = bottom + 2 + 'px';
+            break;
+        case "top":
+            tip.style.left = left + 'px';
+            tip.style.top = top - 35 + 'px';
+            break;
+        case "right":
+            tip.style.left = right + 2 + 'px';
+            tip.style.top = top - 5 + 'px';
+            break;
+        case "left":
+            tip.style.left = left - tip.offsetWidth - 4 + 'px';
+            tip.style.top = top - 5 + 'px';
+            break;
+    };
 };
 
 // close tips on scroll

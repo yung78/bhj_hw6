@@ -8,36 +8,35 @@ const quantity = document.querySelectorAll(".product__quantity-value");
 const add = document.querySelectorAll(".product__add");
 const img = document.querySelectorAll(".product__image");
 const btnClear = document.querySelector(".cart__clear");
-let saveContent = ""
+let saveContent = [];
 
-function addGood(index) {
-    let div1 = document.createElement("div");
-    div1.className = "cart__product";
-    div1.setAttribute("data-id", products[index].getAttribute("data-id"));
-    
-    let icon = document.createElement("img");
-    icon.className = "cart__product-image";
-    icon.src = img[index].src;
-    icon.alt = img[index].alt;
+function addGood(id, src, count) {
+    let div = document.createElement("div");
+    div.className = "cart__product";
+    div.setAttribute("data-id", id);
+    div.innerHTML = `
+    <img class="cart__product-image" src=${src}>
+    <div class="cart__product-count">${count}</div>
+    <a href="#" class="cart__product_delete">&times;</a>
+    `;
 
-    let div2 = document.createElement("div");
-    div2.className = "cart__product-count";
-    div2.textContent = quantity[index].textContent
-
-    let a = document.createElement("a");
-    a.className = "cart__product_delete";
-    a.href = "#";
-    a.innerHTML = "&times;";
-
-    basket.appendChild(div1);
-    div1.appendChild(icon);
-    div1.appendChild(div2);
-    div1.appendChild(a);
+    basket.appendChild(div);
+    saveContent.push({
+        "id": id,
+        "src": src,
+        "quantity": count
+    });
 
     // del product from basket
-    a.addEventListener("click", () =>{
-        console.log(div2.textContent);
-        div1.remove();
+    div.querySelector("a").addEventListener("click", () =>{
+        for (let i=0; i<saveContent.length; i++) {
+            if (saveContent[i].id == div.getAttribute("data-id")) {
+                saveContent.splice(i, 1);
+            };
+        };
+
+        div.remove();
+
         if (!basketProducts.length) cart.style.display = "none";
         dataSave();
     });
@@ -47,6 +46,8 @@ function addGood(index) {
 btnClear.addEventListener("click", () => {
     basket.innerHTML = "";
     cart.style.display = "none";
+
+    saveContent = []
     dataSave();
 });
 
@@ -63,19 +64,19 @@ for (let i=0; i<plus.length; i++) {
     // add product into basket
     add[i].addEventListener("click", () => {
         document.querySelector(".cart").style.display = "block";
+        let id = products[i].getAttribute("data-id");
+        let src = img[i].src;
+        let count =  Number(quantity[i].textContent)
         
-        if (!basketProducts.length) {
-            addGood(i);
+        // let product = Array.of(basketProducts).find((el) => el.getAttribute("data-id") == id); // ПОЧЕМУ-ТО РУГАЕТСЯ НА getAttribute("data-id")
+        let index = saveContent.findIndex((el) => el.id == id);
+        if (index < 0) {
+            addGood(id, src, count);
         } else {
-            let counter = 0;
-            for (let el of basketProducts) {
-                if (products[i].getAttribute("data-id") === el.getAttribute("data-id")) {
-                    el.firstChild.nextSibling.textContent = Number(el.firstChild.nextSibling.textContent) + Number(quantity[i].textContent);
-                    counter++;
-                };
+            basketProducts[index].querySelector("div").textContent = Number(basketProducts[index].querySelector("div").textContent) + count;
+            for (let obj of saveContent) {
+                if (obj.id == id) obj.quantity = Number(obj.quantity) + count;
             };
-            if (!counter) addGood(i);
-
         };
         dataSave();
     });
@@ -83,12 +84,15 @@ for (let i=0; i<plus.length; i++) {
 
 //save basket items after reload
 function dataSave() {
-    saveContent = basket.innerHTML;
+    // console.log(Array.from(basketProducts)[0].getAttribute("data-id")); //а тут без проблем вы водит ...
     let toLoad = JSON.stringify(saveContent);
     localStorage.setItem("toLoad2", toLoad);
 };
 
 window.addEventListener("load", () => {
-    basket.innerHTML = JSON.parse(localStorage.getItem("toLoad2"));
+    let loadItem = JSON.parse(localStorage.getItem("toLoad2"));
+    for (el of loadItem) {
+        addGood(el.id, el.src, el.quantity);
+    };
     if (!basketProducts.length) cart.style.display = "none";
 });

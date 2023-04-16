@@ -2,39 +2,36 @@ const input = document.querySelector(".tasks__input");
 const taskList = document.querySelector(".tasks__list");
 const btnAdd = document.querySelector(".tasks__add");
 const tasks = document.getElementsByClassName("task");
-let docSave = "";
+let textSaveArr = [];
 
 function createElement(text) {
-    
-    let div1 = document.createElement("div");
-    div1.className = "task";
 
-    let div2 = document.createElement("div");
-    div2.className = "task__title";
-    div2.textContent = text;
+    let div = document.createElement("div");
+    div.className = "task";
+    div.innerHTML = `
+    <div class="task__title">
+        ${text}
+    </div>
+    <a href="#" class="task__remove">&times;</a>
+    `;
 
-    let a = document.createElement("a");
-    a.href = "#";
-    a.className = "task__remove";
-    a.innerHTML = "&times;";
-
-    taskList.appendChild(div1);
-    div1.appendChild(div2);
-    div1.appendChild(a);
+    taskList.appendChild(div);
 
     // delete element
-    let delElement = div1.querySelector(".task__remove");
+    let delElement = div.querySelector(".task__remove");
     delElement.addEventListener("click", () => {
-        div1.remove();
-
+        div.remove();
+        let index = textSaveArr.indexOf(text);
+        textSaveArr.splice(index, 1);
         dataSave();
     });
 
+    textSaveArr.push(text)
     dataSave();
 };
 
 function saveElement(e) {
-    if (input.value !== "") { 
+    if (input.value.trim() !== "") { 
         createElement(input.value);
         input.value = ""
     };
@@ -42,43 +39,28 @@ function saveElement(e) {
     e.preventDefault();
 };
 
-
-//save Enter-key
-input.addEventListener("keydown", (e) => {
-    if (e.key === 'Enter') saveElement(e);
-});
-
-//save btn-click
+//save 
 btnAdd.addEventListener("click", (e) => {
     saveElement(e);
 });
 
 //save content after reload
 function dataSave() {
-    docSave = taskList.innerHTML;
-    let toLoad = JSON.stringify(docSave);
+    let toLoad = JSON.stringify(textSaveArr);
     localStorage.setItem("toLoad", toLoad);
 };
 
 window.addEventListener("load", () => {
-    taskList.innerHTML = JSON.parse(localStorage.getItem("toLoad"));
-    const tasksBegin = document.getElementsByClassName("task");
-    const delElemBegin = document.getElementsByClassName("task__remove");
-    
-    // Пытался повесить обработчик на удаление после обновления
-    // не получилось - не срослось)
-    // if (tasksBegin.length) {
-    //     for (let i=0; i<tasksBegin.length; i++) {
-    //         delElemBegin[i].addEventListener ("click", () => {
-    //             tasksBegin[i].remove();
-    //         });
-    //     };
-    // };
+    let unpack = JSON.parse(localStorage.getItem("toLoad"));
+    for (let el of unpack){
+        createElement(el)
+    }
 });
 
 //delete all notes/tasks
 document.querySelector(".tasks__remove__all").addEventListener("click", (e) => {
     taskList.innerHTML = "";
+    textSaveArr = [];
     
     e.preventDefault();
     dataSave()
